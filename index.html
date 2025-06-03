@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Data Dump Processor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            min-height: 600px;
+        }
+
+        .input-section, .output-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 25px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 2px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            background: #fafbfc;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+            background: white;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .clear-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .clear-btn:hover {
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .status.detected {
+            background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%);
+            color: #2d5016;
+            border-left: 4px solid #4caf50;
+        }
+
+        .status.no-data {
+            background: linear-gradient(135deg, #ffd3a5 0%, #fd9853 100%);
+            color: #8b4513;
+            border-left: 4px solid #ff9800;
+        }
+
+        .results {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+        }
+
+        .item {
+            background: white;
+            padding: 10px 15px;
+            margin: 5px 0;
+            border-radius: 8px;
+            border-left: 3px solid #4facfe;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease;
+        }
+
+        .item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .item-number {
+            color: #666;
+            font-size: 0.9rem;
+            margin-right: 10px;
+        }
+
+        .item-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .controls {
+                justify-content: center;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Data Dump Processor</h1>
+            <p>Detect and process line-separated and comma-separated data with ease</p>
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <h2 class="section-title">Input Text</h2>
+                <textarea id="inputText" placeholder="Paste your data here...
+Examples:
+
+Line-separated:
+123
+23
+8888
+1999
+
+Comma-separated:
+123,23,8888,1999
+
+Mixed format:
+123,456
+789
+101,202,303"></textarea>
+                
+                <div class="controls">
+                    <button onclick="processText()">🔍 Analyze Data</button>
+                    <button onclick="formatOutput('single')" id="formatBtn" style="display: none;">📝 Format (Single Quotes)</button>
+                    <button onclick="formatOutput('double')" id="formatBtnDouble" style="display: none;">📄 Format (Double Quotes)</button>
+                    <button onclick="clearInput()" class="clear-btn">🗑️ Clear</button>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <h2 class="section-title">Results</h2>
+                <div id="status" class="status no-data">
+                    No data detected. Paste some line-separated values to get started!
+                </div>
+                
+                <div id="results" class="results" style="display: none;">
+                    <!-- Results will appear here -->
+                </div>
+
+                <div id="formatted-output" class="results" style="display: none;">
+                    <div style="margin-bottom: 15px; font-weight: bold; color: #333;">
+                        📋 Formatted Output (<span id="quote-type">Single Quotes</span>):
+                    </div>
+                    <div id="formatted-text" style="background: white; padding: 15px; border-radius: 8px; border: 2px dashed #4facfe; font-family: 'Courier New', monospace; word-break: break-all; cursor: pointer;" onclick="copyFormatted()" title="Click to copy">
+                        <!-- Formatted output will appear here -->
+                    </div>
+                    <div style="text-align: center; margin-top: 10px; font-size: 0.9rem; color: #666;">
+                        Click the formatted text above to copy it
+                    </div>
+                </div>
+
+                <div id="stats" class="stats" style="display: none;">
+                    <!-- Statistics will appear here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentData = [];
+
+        function processText() {
+            const input = document.getElementById('inputText').value.trim();
+            const statusEl = document.getElementById('status');
+            const resultsEl = document.getElementById('results');
+            const statsEl = document.getElementById('stats');
+
+            if (!input) {
+                statusEl.className = 'status no-data';
+                statusEl.textContent = 'No input provided. Please enter some text to analyze.';
+                resultsEl.style.display = 'none';
+                statsEl.style.display = 'none';
+                return;
+            }
+
+            // First, split by lines and filter out empty lines
+            const lines = input.split(/\r?\n/).filter(line => line.trim() !== '');
+            
+            let finalData = [];
+            let separatorType = '';
+            
+            // Check if we have multiple lines (line-separated data)
+            if (lines.length > 1) {
+                // Check if any line contains commas (mixed format)
+                const hasCommas = lines.some(line => line.includes(','));
+                
+                if (hasCommas) {
+                    // Process each line for comma separation
+                    lines.forEach(line => {
+                        if (line.includes(',')) {
+                            const commaSplit = line.split(',').map(item => item.trim()).filter(item => item !== '');
+                            finalData.push(...commaSplit);
+                        } else {
+                            finalData.push(line.trim());
+                        }
+                    });
+                    separatorType = 'mixed (lines + commas)';
+                } else {
+                    finalData = lines;
+                    separatorType = 'line-separated';
+                }
+            } else if (lines.length === 1) {
+                // Single line - check for comma separation
+                const singleLine = lines[0];
+                if (singleLine.includes(',')) {
+                    finalData = singleLine.split(',').map(item => item.trim()).filter(item => item !== '');
+                    separatorType = 'comma-separated';
+                } else {
+                    finalData = [singleLine];
+                    separatorType = 'single value';
+                }
+            }
+            
+            if (finalData.length === 0) {
+                statusEl.className = 'status no-data';
+                statusEl.textContent = 'No valid data found.';
+                resultsEl.style.display = 'none';
+                statsEl.style.display = 'none';
+                return;
+            }
+
+            // Detect if this looks like a data dump
+            const isDataDump = finalData.length > 1;
+            
+            if (isDataDump) {
+                statusEl.className = 'status detected fade-in';
+                statusEl.innerHTML = `
+                    <strong>✅ Data dump detected!</strong><br>
+                    Found ${finalData.length} ${separatorType} values ready for processing.
+                `;
+                
+                // Store current data
+                currentData = finalData;
+                
+                // Display results
+                displayResults(finalData);
+                displayStats(finalData);
+                
+                resultsEl.style.display = 'block';
+                statsEl.style.display = 'grid';
+                
+                // Show format buttons when we have multiple items
+                document.getElementById('formatBtn').style.display = 'inline-block';
+                document.getElementById('formatBtnDouble').style.display = 'inline-block';
+                document.getElementById('formatted-output').style.display = 'none';
+            } else {
+                statusEl.className = 'status no-data';
+                statusEl.textContent = `Single ${separatorType} detected. Data dumps typically contain multiple separated values.`;
+                resultsEl.style.display = 'none';
+                statsEl.style.display = 'none';
+                document.getElementById('formatBtn').style.display = 'none';
+                document.getElementById('formatBtnDouble').style.display = 'none';
+                document.getElementById('formatted-output').style.display = 'none';
+            }
+        }
+
+        function displayResults(lines) {
+            const resultsEl = document.getElementById('results');
+            resultsEl.innerHTML = lines.map((line, index) => `
+                <div class="item fade-in" style="animation-delay: ${index * 0.1}s">
+                    <span class="item-number">#${index + 1}</span>
+                    <span class="item-value">${escapeHtml(line)}</span>
+                </div>
+            `).join('');
+        }
+
+        function displayStats(lines) {
+            const statsEl = document.getElementById('stats');
+            
+            // Calculate statistics
+            const totalItems = lines.length;
+            const numericItems = lines.filter(line => !isNaN(parseFloat(line.trim())) && isFinite(line.trim())).length;
+            const textItems = totalItems - numericItems;
+            const avgLength = Math.round(lines.reduce((sum, line) => sum + line.length, 0) / totalItems);
+            
+            statsEl.innerHTML = `
+                <div class="stat-card fade-in">
+                    <div class="stat-number">${totalItems}</div>
+                    <div class="stat-label">Total Items</div>
+                </div>
+                <div class="stat-card fade-in" style="animation-delay: 0.1s">
+                    <div class="stat-number">${numericItems}</div>
+                    <div class="stat-label">Numeric</div>
+                </div>
+                <div class="stat-card fade-in" style="animation-delay: 0.2s">
+                    <div class="stat-number">${textItems}</div>
+                    <div class="stat-label">Text</div>
+                </div>
+                <div class="stat-card fade-in" style="animation-delay: 0.3s">
+                    <div class="stat-number">${avgLength}</div>
+                    <div class="stat-label">Avg Length</div>
+                </div>
+            `;
+        }
+
+        function clearInput() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('status').className = 'status no-data';
+            document.getElementById('status').textContent = 'Input cleared. Ready for new data!';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('stats').style.display = 'none';
+            document.getElementById('formatBtn').style.display = 'none';
+            document.getElementById('formatBtnDouble').style.display = 'none';
+            document.getElementById('formatted-output').style.display = 'none';
+            currentData = [];
+        }
+
+        function formatOutput(quoteType = 'single') {
+            if (currentData.length === 0) return;
+            
+            let formatted;
+            if (quoteType === 'double') {
+                // Format as "item1","item2","item3"
+                formatted = currentData.map(item => `"${item.replace(/"/g, '\\"')}"`).join(',');
+                document.getElementById('quote-type').textContent = 'Double Quotes';
+            } else {
+                // Format as 'item1','item2','item3'
+                formatted = currentData.map(item => `'${item.replace(/'/g, "\\'")}'`).join(',');
+                document.getElementById('quote-type').textContent = 'Single Quotes';
+            }
+            
+            document.getElementById('formatted-text').textContent = formatted;
+            document.getElementById('formatted-output').style.display = 'block';
+            document.getElementById('formatted-output').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function copyFormatted() {
+            const formattedText = document.getElementById('formatted-text').textContent;
+            navigator.clipboard.writeText(formattedText).then(() => {
+                // Visual feedback
+                const element = document.getElementById('formatted-text');
+                const originalBorder = element.style.border;
+                element.style.border = '2px solid #4caf50';
+                element.style.backgroundColor = '#e8f5e8';
+                
+                setTimeout(() => {
+                    element.style.border = originalBorder;
+                    element.style.backgroundColor = 'white';
+                }, 1000);
+                
+                // Show temporary message
+                const copyMsg = document.createElement('div');
+                copyMsg.textContent = '✅ Copied to clipboard!';
+                copyMsg.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #4caf50;
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 25px;
+                    z-index: 1000;
+                    font-weight: bold;
+                    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+                `;
+                document.body.appendChild(copyMsg);
+                
+                setTimeout(() => {
+                    document.body.removeChild(copyMsg);
+                }, 2000);
+            }).catch(() => {
+                alert('Could not copy to clipboard. Please select and copy manually.');
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Auto-process on input for better UX
+        document.getElementById('inputText').addEventListener('input', function() {
+            // Debounce to avoid excessive processing
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(processText, 500);
+        });
+
+        // Example data for demonstration
+        document.addEventListener('DOMContentLoaded', function() {
+            const exampleData = `123,456,789
+23
+8888,1999
+hello,world
+42`;
+            document.getElementById('inputText').value = exampleData;
+            processText();
+        });
+    </script>
+</body>
+</html>

@@ -46,6 +46,28 @@
             opacity: 0.9;
         }
 
+        #lang-select {
+            margin-top: 10px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            background: white;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+
+        #lang-select:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        #lang-select:active {
+            transform: translateY(0);
+        }
+
         .main-content {
             padding: 40px;
             display: grid;
@@ -247,13 +269,17 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 Data Dump Processor</h1>
-            <p>Detect and process line-separated and comma-separated data with ease</p>
+            <h1 id="page-title">📊 Data Dump Processor</h1>
+            <p id="tagline">Detect and process line-separated and comma-separated data with ease</p>
+            <select id="lang-select" onchange="setLanguage(this.value)">
+                <option value="en">English</option>
+                <option value="es">Español</option>
+            </select>
         </div>
 
         <div class="main-content">
             <div class="input-section">
-                <h2 class="section-title">Input Text</h2>
+                <h2 class="section-title" id="input-title">Input Text</h2>
                 <textarea id="inputText" placeholder="Paste your data here...
 Examples:
 
@@ -272,15 +298,15 @@ Mixed format:
 101,202,303"></textarea>
                 
                 <div class="controls">
-                    <button onclick="processText()">🔍 Analyze Data</button>
+                    <button id="analyzeBtn" onclick="processText()">🔍 Analyze Data</button>
                     <button onclick="formatOutput('single')" id="formatBtn" style="display: none;">📝 Format (Single Quotes)</button>
                     <button onclick="formatOutput('double')" id="formatBtnDouble" style="display: none;">📄 Format (Double Quotes)</button>
-                    <button onclick="clearInput()" class="clear-btn">🗑️ Clear</button>
+                    <button id="clearBtn" onclick="clearInput()" class="clear-btn">🗑️ Clear</button>
                 </div>
             </div>
 
             <div class="output-section">
-                <h2 class="section-title">Results</h2>
+                <h2 class="section-title" id="results-title">Results</h2>
                 <div id="status" class="status no-data">
                     No data detected. Paste some line-separated values to get started!
                 </div>
@@ -290,13 +316,13 @@ Mixed format:
                 </div>
 
                 <div id="formatted-output" class="results" style="display: none;">
-                    <div style="margin-bottom: 15px; font-weight: bold; color: #333;">
-                        📋 Formatted Output (<span id="quote-type">Single Quotes</span>):
+                    <div id="formatted-output-label" style="margin-bottom: 15px; font-weight: bold; color: #333;">
+                        📋 <span id="formatted-output-text">Formatted Output</span> (<span id="quote-type">Single Quotes</span>):
                     </div>
                     <div id="formatted-text" style="background: white; padding: 15px; border-radius: 8px; border: 2px dashed #4facfe; font-family: 'Courier New', monospace; word-break: break-all; cursor: pointer;" onclick="copyFormatted()" title="Click to copy">
                         <!-- Formatted output will appear here -->
                     </div>
-                    <div style="text-align: center; margin-top: 10px; font-size: 0.9rem; color: #666;">
+                    <div id="copy-hint" style="text-align: center; margin-top: 10px; font-size: 0.9rem; color: #666;">
                         Click the formatted text above to copy it
                     </div>
                 </div>
@@ -311,6 +337,96 @@ Mixed format:
     <script>
         let currentData = [];
 
+        const translations = {
+            en: {
+                title: '📊 Data Dump Processor',
+                tagline: 'Detect and process line-separated and comma-separated data with ease',
+                inputText: 'Input Text',
+                analyzeData: 'Analyze Data',
+                formatSingle: 'Format (Single Quotes)',
+                formatDouble: 'Format (Double Quotes)',
+                clear: 'Clear',
+                results: 'Results',
+                noDataDetected: 'No data detected. Paste some line-separated values to get started!',
+                formattedOutput: 'Formatted Output',
+                copyHint: 'Click the formatted text above to copy it',
+                noInputProvided: 'No input provided. Please enter some text to analyze.',
+                noValidData: 'No valid data found.',
+                dataDumpDetected: 'Data dump detected!',
+                foundValues: 'Found {count} {type} values ready for processing.',
+                singleDetected: 'Single {type} detected. Data dumps typically contain multiple separated values.',
+                inputCleared: 'Input cleared. Ready for new data!',
+                copied: '✅ Copied to clipboard!',
+                copyFail: 'Could not copy to clipboard. Please select and copy manually.',
+                totalItems: 'Total Items',
+                numeric: 'Numeric',
+                text: 'Text',
+                avgLength: 'Avg Length',
+                singleQuotes: 'Single Quotes',
+                doubleQuotes: 'Double Quotes',
+                placeholder: 'Paste your data here...'
+            },
+            es: {
+                title: '📊 Procesador de Datos',
+                tagline: 'Detecta y procesa datos separados por líneas o comas fácilmente',
+                inputText: 'Texto de Entrada',
+                analyzeData: 'Analizar Datos',
+                formatSingle: 'Formatear (Comillas simples)',
+                formatDouble: 'Formatear (Comillas dobles)',
+                clear: 'Limpiar',
+                results: 'Resultados',
+                noDataDetected: 'No se detectaron datos. ¡Pega algunos valores separados por líneas para comenzar!',
+                formattedOutput: 'Salida Formateada',
+                copyHint: 'Haz clic en el texto formateado para copiarlo',
+                noInputProvided: 'No se ingresó texto. Por favor escribe algo para analizar.',
+                noValidData: 'No se encontraron datos válidos.',
+                dataDumpDetected: '¡Volcado de datos detectado!',
+                foundValues: 'Se encontraron {count} valores {type} listos para procesar.',
+                singleDetected: 'Se detectó un único valor {type}. Los volcados suelen contener varios valores separados.',
+                inputCleared: 'Entrada limpiada. ¡Lista para nuevos datos!',
+                copied: '✅ ¡Copiado al portapapeles!',
+                copyFail: 'No se pudo copiar al portapapeles. Selecciona y copia manualmente.',
+                totalItems: 'Total',
+                numeric: 'Numéricos',
+                text: 'Texto',
+                avgLength: 'Longitud Prom.',
+                singleQuotes: 'Comillas simples',
+                doubleQuotes: 'Comillas dobles',
+                placeholder: 'Pega tus datos aquí...'
+            }
+        };
+
+        let currentLang = (navigator.language || navigator.userLanguage || 'en').toLowerCase().startsWith('es') ? 'es' : 'en';
+
+        function t(key, params = {}) {
+            let str = (translations[currentLang] && translations[currentLang][key]) || translations.en[key] || key;
+            Object.keys(params).forEach(k => {
+                str = str.replace('{' + k + '}', params[k]);
+            });
+            return str;
+        }
+
+        function setLanguage(lang) {
+            if (!translations[lang]) lang = 'en';
+            currentLang = lang;
+            document.documentElement.lang = lang;
+            document.getElementById('lang-select').value = lang;
+            document.getElementById('page-title').textContent = t('title');
+            document.title = t('title');
+            document.getElementById('tagline').textContent = t('tagline');
+            document.getElementById('input-title').textContent = t('inputText');
+            document.getElementById('inputText').placeholder = t('placeholder');
+            document.getElementById('analyzeBtn').innerHTML = '🔍 ' + t('analyzeData');
+            document.getElementById('formatBtn').innerHTML = '📝 ' + t('formatSingle');
+            document.getElementById('formatBtnDouble').innerHTML = '📄 ' + t('formatDouble');
+            document.getElementById('clearBtn').innerHTML = '🗑️ ' + t('clear');
+            document.getElementById('results-title').textContent = t('results');
+            document.getElementById('status').textContent = t('noDataDetected');
+            document.getElementById('formatted-output-text').textContent = t('formattedOutput');
+            document.getElementById('quote-type').textContent = t('singleQuotes');
+            document.getElementById('copy-hint').textContent = t('copyHint');
+        }
+
         function processText() {
             const input = document.getElementById('inputText').value.trim();
             const statusEl = document.getElementById('status');
@@ -319,7 +435,7 @@ Mixed format:
 
             if (!input) {
                 statusEl.className = 'status no-data';
-                statusEl.textContent = 'No input provided. Please enter some text to analyze.';
+                statusEl.textContent = t('noInputProvided');
                 resultsEl.style.display = 'none';
                 statsEl.style.display = 'none';
                 return;
@@ -365,7 +481,7 @@ Mixed format:
             
             if (finalData.length === 0) {
                 statusEl.className = 'status no-data';
-                statusEl.textContent = 'No valid data found.';
+                statusEl.textContent = t('noValidData');
                 resultsEl.style.display = 'none';
                 statsEl.style.display = 'none';
                 return;
@@ -377,8 +493,8 @@ Mixed format:
             if (isDataDump) {
                 statusEl.className = 'status detected fade-in';
                 statusEl.innerHTML = `
-                    <strong>✅ Data dump detected!</strong><br>
-                    Found ${finalData.length} ${separatorType} values ready for processing.
+                    <strong>✅ ${t('dataDumpDetected')}</strong><br>
+                    ${t('foundValues', {count: finalData.length, type: separatorType})}
                 `;
                 
                 // Store current data
@@ -397,7 +513,7 @@ Mixed format:
                 document.getElementById('formatted-output').style.display = 'none';
             } else {
                 statusEl.className = 'status no-data';
-                statusEl.textContent = `Single ${separatorType} detected. Data dumps typically contain multiple separated values.`;
+                statusEl.textContent = t('singleDetected', {type: separatorType});
                 resultsEl.style.display = 'none';
                 statsEl.style.display = 'none';
                 document.getElementById('formatBtn').style.display = 'none';
@@ -428,19 +544,19 @@ Mixed format:
             statsEl.innerHTML = `
                 <div class="stat-card fade-in">
                     <div class="stat-number">${totalItems}</div>
-                    <div class="stat-label">Total Items</div>
+                    <div class="stat-label">${t('totalItems')}</div>
                 </div>
                 <div class="stat-card fade-in" style="animation-delay: 0.1s">
                     <div class="stat-number">${numericItems}</div>
-                    <div class="stat-label">Numeric</div>
+                    <div class="stat-label">${t('numeric')}</div>
                 </div>
                 <div class="stat-card fade-in" style="animation-delay: 0.2s">
                     <div class="stat-number">${textItems}</div>
-                    <div class="stat-label">Text</div>
+                    <div class="stat-label">${t('text')}</div>
                 </div>
                 <div class="stat-card fade-in" style="animation-delay: 0.3s">
                     <div class="stat-number">${avgLength}</div>
-                    <div class="stat-label">Avg Length</div>
+                    <div class="stat-label">${t('avgLength')}</div>
                 </div>
             `;
         }
@@ -448,7 +564,7 @@ Mixed format:
         function clearInput() {
             document.getElementById('inputText').value = '';
             document.getElementById('status').className = 'status no-data';
-            document.getElementById('status').textContent = 'Input cleared. Ready for new data!';
+            document.getElementById('status').textContent = t('inputCleared');
             document.getElementById('results').style.display = 'none';
             document.getElementById('stats').style.display = 'none';
             document.getElementById('formatBtn').style.display = 'none';
@@ -464,11 +580,11 @@ Mixed format:
             if (quoteType === 'double') {
                 // Format as "item1","item2","item3"
                 formatted = currentData.map(item => `"${item.replace(/"/g, '\\"')}"`).join(',');
-                document.getElementById('quote-type').textContent = 'Double Quotes';
+                document.getElementById('quote-type').textContent = t('doubleQuotes');
             } else {
                 // Format as 'item1','item2','item3'
                 formatted = currentData.map(item => `'${item.replace(/'/g, "\\'")}'`).join(',');
-                document.getElementById('quote-type').textContent = 'Single Quotes';
+                document.getElementById('quote-type').textContent = t('singleQuotes');
             }
             
             document.getElementById('formatted-text').textContent = formatted;
@@ -492,7 +608,7 @@ Mixed format:
                 
                 // Show temporary message
                 const copyMsg = document.createElement('div');
-                copyMsg.textContent = '✅ Copied to clipboard!';
+                copyMsg.textContent = t('copied');
                 copyMsg.style.cssText = `
                     position: fixed;
                     top: 20px;
@@ -511,7 +627,7 @@ Mixed format:
                     document.body.removeChild(copyMsg);
                 }, 2000);
             }).catch(() => {
-                alert('Could not copy to clipboard. Please select and copy manually.');
+                alert(t('copyFail'));
             });
         }
 
@@ -536,6 +652,7 @@ Mixed format:
 hello,world
 42`;
             document.getElementById('inputText').value = exampleData;
+            setLanguage(currentLang);
             processText();
         });
     </script>

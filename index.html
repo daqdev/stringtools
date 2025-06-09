@@ -3,658 +3,342 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Data Dump Processor</title>
+    <title>string tools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
         }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+        .card {
+            background-color: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease-in-out;
         }
-
-        .header {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            padding: 30px;
-            text-align: center;
+        .btn {
+            border-radius: 0.75rem;
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.1);
+        }
+        .btn-primary {
+            background-color: #4f46e5;
             color: white;
         }
-
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        .btn-primary:hover {
+            background-color: #4338ca;
         }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: #475569;
         }
-
-        #lang-select {
-            margin-top: 10px;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 25px;
-            font-weight: 600;
-            cursor: pointer;
-            background: white;
-            color: #333;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        .btn-secondary:hover {
+            background-color: #cbd5e1;
         }
-
-        #lang-select:hover {
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-            transform: translateY(-2px);
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
         }
-
-        #lang-select:active {
-            transform: translateY(0);
+        .btn-danger:hover {
+            background-color: #dc2626;
         }
-
-        .main-content {
-            padding: 40px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            min-height: 600px;
-        }
-
-        .input-section, .output-section {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
-        .section-title {
-            font-size: 1.4rem;
-            margin-bottom: 20px;
-            color: #333;
+        .result-item {
             display: flex;
             align-items: center;
-            gap: 10px;
+            padding: 0.75rem 1rem;
+            background-color: #f8fafc;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 0.5rem;
         }
-
-        .section-title::before {
-            content: '';
-            width: 4px;
-            height: 25px;
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            border-radius: 2px;
-        }
-
-        textarea {
-            width: 100%;
-            height: 300px;
-            border: 2px solid #e1e8ed;
-            border-radius: 12px;
-            padding: 15px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            resize: vertical;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
-            background: #fafbfc;
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: #4facfe;
-            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
-            background: white;
-        }
-
-        .controls {
-            margin: 20px 0;
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        button {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
-            cursor: pointer;
+        .result-index {
+            color: #64748b;
             font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+            margin-right: 1rem;
         }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
+        .result-value {
+            color: #1e293b;
         }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        .clear-btn {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-        }
-
-        .clear-btn:hover {
-            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
-        }
-
-        .status {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .status.detected {
-            background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%);
-            color: #2d5016;
-            border-left: 4px solid #4caf50;
-        }
-
-        .status.no-data {
-            background: linear-gradient(135deg, #ffd3a5 0%, #fd9853 100%);
-            color: #8b4513;
-            border-left: 4px solid #ff9800;
-        }
-
-        .results {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            max-height: 400px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-        }
-
-        .item {
-            background: white;
-            padding: 10px 15px;
-            margin: 5px 0;
-            border-radius: 8px;
-            border-left: 3px solid #4facfe;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            transition: transform 0.2s ease;
-        }
-
-        .item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .item-number {
-            color: #666;
-            font-size: 0.9rem;
-            margin-right: 10px;
-        }
-
-        .item-value {
-            color: #333;
-            font-weight: 500;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .stat-number {
-            font-size: 1.8rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
-            opacity: 0.9;
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-                gap: 20px;
-                padding: 20px;
-            }
-
-            .header h1 {
-                font-size: 2rem;
-            }
-
-            .controls {
-                justify-content: center;
-            }
-        }
-
         .fade-in {
-            animation: fadeIn 0.5s ease-in;
+            animation: fadeIn 0.5s ease-in-out;
         }
-
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1 id="page-title">📊 Data Dump Processor</h1>
-            <p id="tagline">Detect and process line-separated and comma-separated data with ease</p>
-            <select id="lang-select" onchange="setLanguage(this.value)" style="margin-top:10px;">
-                <option value="en">English</option>
-                <option value="es">Español</option>
-            </select>
-        </div>
+<body class="min-h-screen flex flex-col items-center p-4">
 
-        <div class="main-content">
-            <div class="input-section">
-                <h2 class="section-title" id="input-title">Input Text</h2>
-                <textarea id="inputText" placeholder="Paste your data here...
-Examples:
+    <header class="relative w-full max-w-6xl mb-8 text-center py-4">
+        <h1 id="site-title" class="text-3xl font-bold">strings</h1>
+        <button id="langToggle" class="absolute bottom-4 right-4 w-10 h-10 rounded-md bg-gray-200 flex items-center justify-center"></button>
+    </header>
 
-Line-separated:
-123
-23
-8888
-1999
-
-Comma-separated:
-123,23,8888,1999
-
-Mixed format:
-123,456
-789
-101,202,303"></textarea>
-                
-                <div class="controls">
-                    <button id="analyzeBtn" onclick="processText()">🔍 Analyze Data</button>
-                    <button onclick="formatOutput('single')" id="formatBtn" style="display: none;">📝 Format (Single Quotes)</button>
-                    <button onclick="formatOutput('double')" id="formatBtnDouble" style="display: none;">📄 Format (Double Quotes)</button>
-                    <button id="clearBtn" onclick="clearInput()" class="clear-btn">🗑️ Clear</button>
-                </div>
+    <main class="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-6xl">
+        <div class="card p-8 flex flex-col">
+            <div class="flex items-center mb-6">
+                 <div class="bg-indigo-100 text-indigo-600 p-2 rounded-lg mr-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                 </div>
+                <h1 id="input-title" class="text-2xl font-bold text-gray-800">Input Text</h1>
             </div>
-
-            <div class="output-section">
-                <h2 class="section-title" id="results-title">Results</h2>
-                <div id="status" class="status no-data">
-                    No data detected. Paste some line-separated values to get started!
-                </div>
-                
-                <div id="results" class="results" style="display: none;">
-                    <!-- Results will appear here -->
-                </div>
-
-                <div id="formatted-output" class="results" style="display: none;">
-                    <div id="formatted-output-label" style="margin-bottom: 15px; font-weight: bold; color: #333;">
-                        📋 <span id="formatted-output-text">Formatted Output</span> (<span id="quote-type">Single Quotes</span>):
-                    </div>
-                    <div id="formatted-text" style="background: white; padding: 15px; border-radius: 8px; border: 2px dashed #4facfe; font-family: 'Courier New', monospace; word-break: break-all; cursor: pointer;" onclick="copyFormatted()" title="Click to copy">
-                        <!-- Formatted output will appear here -->
-                    </div>
-                    <div id="copy-hint" style="text-align: center; margin-top: 10px; font-size: 0.9rem; color: #666;">
-                        Click the formatted text above to copy it
-                    </div>
-                </div>
-
-                <div id="stats" class="stats" style="display: none;">
-                    <!-- Statistics will appear here -->
-                </div>
+            <textarea id="inputText" class="w-full flex-grow bg-gray-50 border border-gray-300 rounded-xl p-4 text-gray-700 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition resize-none" rows="12" placeholder="Paste your data here... e.g.&#10;123, 456, 789&#10;23&#10;hello,world&#10;42"></textarea>
+            <div class="grid grid-cols-2 sm:grid-cols-2 gap-4 mt-6">
+                <button id="analyzeBtn" class="btn btn-primary p-3 flex items-center justify-center"><i class="fas fa-search mr-2"></i>Analyze Data</button>
+                <button id="formatSingleBtn" class="btn btn-secondary p-3">Format (Single Quotes)</button>
+                <button id="formatDoubleBtn" class="btn btn-secondary p-3">Format (Double Quotes)</button>
+                <button id="clearBtn" class="btn btn-danger p-3 flex items-center justify-center"><i class="fas fa-trash-alt mr-2"></i>Clear</button>
             </div>
         </div>
-    </div>
+
+        <div class="card p-8 flex flex-col">
+             <div class="flex items-center mb-6">
+                 <div class="bg-green-100 text-green-600 p-2 rounded-lg mr-4">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                 </div>
+                <h1 id="results-title" class="text-2xl font-bold text-gray-800">Results</h1>
+            </div>
+            
+            <div id="results-message" class="hidden bg-green-100 border border-green-200 text-green-800 px-4 py-3 rounded-xl mb-4 text-sm flex items-center">
+                <i class="fas fa-check-circle mr-2"></i>
+                <span id="detectionMessage"></span>
+            </div>
+
+            <div id="results-list" class="flex-grow overflow-y-auto pr-2" style="max-height: 300px;">
+                <!-- Results will be dynamically inserted here -->
+            </div>
+            
+            <div id="formatted-output-container" class="mt-6 hidden">
+                <div class=" relative">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2" id="formattedOutputTitle">Formatted Output:</h3>
+                    <button id="copyBtn" class="absolute top-1 right-3 text-gray-400 hover:text-black transition"
+                        title="Copy to clipboard">
+                        <i class="far fa-copy fa-lg"></i>
+                    </button>
+                </div>
+                <!-- <h3 class="text-lg font-semibold text-gray-700 mb-2" id="formattedOutputTitle">Formatted Output:</h3> -->
+                <!-- <div class="relative"> -->
+                    <textarea id="formattedOutput" readonly class="w-full bg-gray-900 text-green-400 font-mono text-sm border border-gray-700 rounded-xl p-4 pr-12 focus:outline-none resize-none" rows="4"></textarea>
+                    <!-- <button id="copyBtn" class="absolute top-3 right-3 text-gray-400 hover:text-white transition" title="Copy to clipboard">
+                        <i class="far fa-copy fa-lg"></i>
+                    </button>
+                </div> -->
+                 <p id="copy-hint" class="text-xs text-gray-500 mt-2 text-center">Click the formatted text or the icon to copy it.</p>
+            </div>
+        </div>
+    </main>
 
     <script>
-        let currentData = [];
+        const inputText = document.getElementById('inputText');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const formatSingleBtn = document.getElementById('formatSingleBtn');
+        const formatDoubleBtn = document.getElementById('formatDoubleBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const resultsMessage = document.getElementById('results-message');
+        const detectionMessage = document.getElementById('detectionMessage');
+        const resultsList = document.getElementById('results-list');
+        const formattedOutputContainer = document.getElementById('formatted-output-container');
+        const formattedOutputTitle = document.getElementById('formattedOutputTitle');
+        const formattedOutput = document.getElementById('formattedOutput');
+        const copyBtn = document.getElementById('copyBtn');
+        const langToggle = document.getElementById('langToggle');
+        const inputTitle = document.getElementById('input-title');
+        const resultsTitle = document.getElementById('results-title');
+        const copyHintEl = document.getElementById('copy-hint');
 
         const translations = {
             en: {
-                title: '📊 Data Dump Processor',
-                tagline: 'Detect and process line-separated and comma-separated data with ease',
                 inputText: 'Input Text',
                 analyzeData: 'Analyze Data',
                 formatSingle: 'Format (Single Quotes)',
                 formatDouble: 'Format (Double Quotes)',
                 clear: 'Clear',
                 results: 'Results',
-                noDataDetected: 'No data detected. Paste some line-separated values to get started!',
                 formattedOutput: 'Formatted Output',
-                copyHint: 'Click the formatted text above to copy it',
-                noInputProvided: 'No input provided. Please enter some text to analyze.',
-                noValidData: 'No valid data found.',
-                dataDumpDetected: 'Data dump detected!',
-                foundValues: 'Found {count} {type} values ready for processing.',
-                singleDetected: 'Single {type} detected. Data dumps typically contain multiple separated values.',
-                inputCleared: 'Input cleared. Ready for new data!',
-                copied: '✅ Copied to clipboard!',
-                copyFail: 'Could not copy to clipboard. Please select and copy manually.',
-                totalItems: 'Total Items',
-                numeric: 'Numeric',
-                text: 'Text',
-                avgLength: 'Avg Length',
                 singleQuotes: 'Single Quotes',
                 doubleQuotes: 'Double Quotes',
-                placeholder: 'Paste your data here...'
+                copyHint: 'Click the formatted text or the icon to copy it.',
+                detection: 'Data dump detected! Found {count} values ready for processing.',
+                placeholder: 'Paste your data here... e.g.\n123, 456, 789\n23\nhello,world\n42'
             },
             es: {
-                title: '📊 Procesador de Datos',
-                tagline: 'Detecta y procesa datos separados por líneas o comas fácilmente',
                 inputText: 'Texto de Entrada',
                 analyzeData: 'Analizar Datos',
                 formatSingle: 'Formatear (Comillas simples)',
                 formatDouble: 'Formatear (Comillas dobles)',
                 clear: 'Limpiar',
                 results: 'Resultados',
-                noDataDetected: 'No se detectaron datos. ¡Pega algunos valores separados por líneas para comenzar!',
                 formattedOutput: 'Salida Formateada',
-                copyHint: 'Haz clic en el texto formateado para copiarlo',
-                noInputProvided: 'No se ingresó texto. Por favor escribe algo para analizar.',
-                noValidData: 'No se encontraron datos válidos.',
-                dataDumpDetected: '¡Volcado de datos detectado!',
-                foundValues: 'Se encontraron {count} valores {type} listos para procesar.',
-                singleDetected: 'Se detectó un único valor {type}. Los volcados suelen contener varios valores separados.',
-                inputCleared: 'Entrada limpiada. ¡Lista para nuevos datos!',
-                copied: '✅ ¡Copiado al portapapeles!',
-                copyFail: 'No se pudo copiar al portapapeles. Selecciona y copia manualmente.',
-                totalItems: 'Total',
-                numeric: 'Numéricos',
-                text: 'Texto',
-                avgLength: 'Longitud Prom.',
                 singleQuotes: 'Comillas simples',
                 doubleQuotes: 'Comillas dobles',
-                placeholder: 'Pega tus datos aquí...'
+                copyHint: 'Haz clic en el texto formateado o el ícono para copiarlo.',
+                detection: '¡Volcado detectado! Se encontraron {count} valores listos para procesar.',
+                placeholder: 'Pega tus datos aquí... ej.\n123, 456, 789\n23\nhola,mundo\n42'
+            },
+            pt: {
+                inputText: 'Texto de Entrada',
+                analyzeData: 'Analisar Dados',
+                formatSingle: 'Formatar (Aspas simples)',
+                formatDouble: 'Formatar (Aspas duplas)',
+                clear: 'Limpar',
+                results: 'Resultados',
+                formattedOutput: 'Saída Formatada',
+                singleQuotes: 'Aspas simples',
+                doubleQuotes: 'Aspas duplas',
+                copyHint: 'Clique no texto formatado ou no ícone para copiar.',
+                detection: 'Dump detectado! Encontrados {count} valores prontos para processar.',
+                placeholder: 'Cole seus dados aqui... ex.\n123, 456, 789\n23\nola,mundo\n42'
             }
         };
 
-        let currentLang = (navigator.language || navigator.userLanguage || 'en').toLowerCase().startsWith('es') ? 'es' : 'en';
+        const langOrder = ['en', 'es', 'pt'];
+        const flagIcons = { en: '🇺🇸', es: '🇦🇷', pt: '🇧🇷' };
+        let currentLang = 'en';
 
         function t(key, params = {}) {
-            let str = (translations[currentLang] && translations[currentLang][key]) || translations.en[key] || key;
-            Object.keys(params).forEach(k => {
-                str = str.replace('{' + k + '}', params[k]);
-            });
+            let str = translations[currentLang][key] || key;
+            for (const p in params) {
+                str = str.replace('{' + p + '}', params[p]);
+            }
             return str;
         }
 
         function setLanguage(lang) {
-            if (!translations[lang]) lang = 'en';
             currentLang = lang;
             document.documentElement.lang = lang;
-            document.getElementById('lang-select').value = lang;
-            document.getElementById('page-title').textContent = t('title');
-            document.title = t('title');
-            document.getElementById('tagline').textContent = t('tagline');
-            document.getElementById('input-title').textContent = t('inputText');
-            document.getElementById('inputText').placeholder = t('placeholder');
-            document.getElementById('analyzeBtn').innerHTML = '🔍 ' + t('analyzeData');
-            document.getElementById('formatBtn').innerHTML = '📝 ' + t('formatSingle');
-            document.getElementById('formatBtnDouble').innerHTML = '📄 ' + t('formatDouble');
-            document.getElementById('clearBtn').innerHTML = '🗑️ ' + t('clear');
-            document.getElementById('results-title').textContent = t('results');
-            document.getElementById('status').textContent = t('noDataDetected');
-            document.getElementById('formatted-output-text').textContent = t('formattedOutput');
-            document.getElementById('quote-type').textContent = t('singleQuotes');
-            document.getElementById('copy-hint').textContent = t('copyHint');
+            langToggle.textContent = flagIcons[lang];
+            inputTitle.textContent = t('inputText');
+            analyzeBtn.innerHTML = '<i class="fas fa-search mr-2"></i>' + t('analyzeData');
+            formatSingleBtn.textContent = t('formatSingle');
+            formatDoubleBtn.textContent = t('formatDouble');
+            clearBtn.innerHTML = '<i class="fas fa-trash-alt mr-2"></i>' + t('clear');
+            resultsTitle.textContent = t('results');
+            formattedOutputTitle.textContent = t('formattedOutput') + ':';
+            copyHintEl.textContent = t('copyHint');
+            inputText.placeholder = t('placeholder');
         }
 
-        function processText() {
-            const input = document.getElementById('inputText').value.trim();
-            const statusEl = document.getElementById('status');
-            const resultsEl = document.getElementById('results');
-            const statsEl = document.getElementById('stats');
+        function toggleLanguage() {
+            const next = (langOrder.indexOf(currentLang) + 1) % langOrder.length;
+            setLanguage(langOrder[next]);
+        }
 
-            if (!input) {
-                statusEl.className = 'status no-data';
-                statusEl.textContent = t('noInputProvided');
-                resultsEl.style.display = 'none';
-                statsEl.style.display = 'none';
+        let parsedData = [];
+
+        analyzeBtn.addEventListener('click', analyzeData);
+        formatSingleBtn.addEventListener('click', () => formatData("'"));
+        formatDoubleBtn.addEventListener('click', () => formatData('"'));
+        clearBtn.addEventListener('click', clearAll);
+        copyBtn.addEventListener('click', copyToClipboard);
+        formattedOutput.addEventListener('click', copyToClipboard);
+        langToggle.addEventListener('click', toggleLanguage);
+
+        setLanguage(currentLang);
+
+        function analyzeData() {
+            const text = inputText.value.trim();
+            if (!text) {
+                parsedData = [];
+                updateResultsUI();
                 return;
             }
 
-            // First, split by lines and filter out empty lines
-            const lines = input.split(/\r?\n/).filter(line => line.trim() !== '');
+            const lines = text.split('\n').filter(line => line.trim() !== '');
+            const values = lines.flatMap(line => line.split(',').map(item => item.trim()).filter(item => item !== ''));
             
-            let finalData = [];
-            let separatorType = '';
-            
-            // Check if we have multiple lines (line-separated data)
-            if (lines.length > 1) {
-                // Check if any line contains commas (mixed format)
-                const hasCommas = lines.some(line => line.includes(','));
-                
-                if (hasCommas) {
-                    // Process each line for comma separation
-                    lines.forEach(line => {
-                        if (line.includes(',')) {
-                            const commaSplit = line.split(',').map(item => item.trim()).filter(item => item !== '');
-                            finalData.push(...commaSplit);
-                        } else {
-                            finalData.push(line.trim());
-                        }
-                    });
-                    separatorType = 'mixed (lines + commas)';
-                } else {
-                    finalData = lines;
-                    separatorType = 'line-separated';
-                }
-            } else if (lines.length === 1) {
-                // Single line - check for comma separation
-                const singleLine = lines[0];
-                if (singleLine.includes(',')) {
-                    finalData = singleLine.split(',').map(item => item.trim()).filter(item => item !== '');
-                    separatorType = 'comma-separated';
-                } else {
-                    finalData = [singleLine];
-                    separatorType = 'single value';
-                }
-            }
-            
-            if (finalData.length === 0) {
-                statusEl.className = 'status no-data';
-                statusEl.textContent = t('noValidData');
-                resultsEl.style.display = 'none';
-                statsEl.style.display = 'none';
-                return;
-            }
+            parsedData = values;
+            updateResultsUI();
+        }
 
-            // Detect if this looks like a data dump
-            const isDataDump = finalData.length > 1;
-            
-            if (isDataDump) {
-                statusEl.className = 'status detected fade-in';
-                statusEl.innerHTML = `
-                    <strong>✅ ${t('dataDumpDetected')}</strong><br>
-                    ${t('foundValues', {count: finalData.length, type: separatorType})}
-                `;
-                
-                // Store current data
-                currentData = finalData;
-                
-                // Display results
-                displayResults(finalData);
-                displayStats(finalData);
-                
-                resultsEl.style.display = 'block';
-                statsEl.style.display = 'grid';
-                
-                // Show format buttons when we have multiple items
-                document.getElementById('formatBtn').style.display = 'inline-block';
-                document.getElementById('formatBtnDouble').style.display = 'inline-block';
-                document.getElementById('formatted-output').style.display = 'none';
+        function updateResultsUI() {
+            resultsList.innerHTML = '';
+
+            if (parsedData.length > 0) {
+                detectionMessage.textContent = t('detection', { count: parsedData.length });
+                resultsMessage.classList.remove('hidden');
+
+                parsedData.forEach((item, index) => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'result-item fade-in';
+                    resultItem.style.animationDelay = `${index * 50}ms`;
+                    resultItem.innerHTML = `
+                        <span class="result-index">#${index + 1}</span>
+                        <span class="result-value">${escapeHtml(item)}</span>
+                    `;
+                    resultsList.appendChild(resultItem);
+                });
             } else {
-                statusEl.className = 'status no-data';
-                statusEl.textContent = t('singleDetected', {type: separatorType});
-                resultsEl.style.display = 'none';
-                statsEl.style.display = 'none';
-                document.getElementById('formatBtn').style.display = 'none';
-                document.getElementById('formatBtnDouble').style.display = 'none';
-                document.getElementById('formatted-output').style.display = 'none';
+                resultsMessage.classList.add('hidden');
+                formattedOutputContainer.classList.add('hidden');
             }
         }
 
-        function displayResults(lines) {
-            const resultsEl = document.getElementById('results');
-            resultsEl.innerHTML = lines.map((line, index) => `
-                <div class="item fade-in" style="animation-delay: ${index * 0.1}s">
-                    <span class="item-number">#${index + 1}</span>
-                    <span class="item-value">${escapeHtml(line)}</span>
-                </div>
-            `).join('');
-        }
-
-        function displayStats(lines) {
-            const statsEl = document.getElementById('stats');
-            
-            // Calculate statistics
-            const totalItems = lines.length;
-            const numericItems = lines.filter(line => !isNaN(parseFloat(line.trim())) && isFinite(line.trim())).length;
-            const textItems = totalItems - numericItems;
-            const avgLength = Math.round(lines.reduce((sum, line) => sum + line.length, 0) / totalItems);
-            
-            statsEl.innerHTML = `
-                <div class="stat-card fade-in">
-                    <div class="stat-number">${totalItems}</div>
-                    <div class="stat-label">${t('totalItems')}</div>
-                </div>
-                <div class="stat-card fade-in" style="animation-delay: 0.1s">
-                    <div class="stat-number">${numericItems}</div>
-                    <div class="stat-label">${t('numeric')}</div>
-                </div>
-                <div class="stat-card fade-in" style="animation-delay: 0.2s">
-                    <div class="stat-number">${textItems}</div>
-                    <div class="stat-label">${t('text')}</div>
-                </div>
-                <div class="stat-card fade-in" style="animation-delay: 0.3s">
-                    <div class="stat-number">${avgLength}</div>
-                    <div class="stat-label">${t('avgLength')}</div>
-                </div>
-            `;
-        }
-
-        function clearInput() {
-            document.getElementById('inputText').value = '';
-            document.getElementById('status').className = 'status no-data';
-            document.getElementById('status').textContent = t('inputCleared');
-            document.getElementById('results').style.display = 'none';
-            document.getElementById('stats').style.display = 'none';
-            document.getElementById('formatBtn').style.display = 'none';
-            document.getElementById('formatBtnDouble').style.display = 'none';
-            document.getElementById('formatted-output').style.display = 'none';
-            currentData = [];
-        }
-
-        function formatOutput(quoteType = 'single') {
-            if (currentData.length === 0) return;
-            
-            let formatted;
-            if (quoteType === 'double') {
-                // Format as "item1","item2","item3"
-                formatted = currentData.map(item => `"${item.replace(/"/g, '\\"')}"`).join(',');
-                document.getElementById('quote-type').textContent = t('doubleQuotes');
-            } else {
-                // Format as 'item1','item2','item3'
-                formatted = currentData.map(item => `'${item.replace(/'/g, "\\'")}'`).join(',');
-                document.getElementById('quote-type').textContent = t('singleQuotes');
+        function formatData(quoteType) {
+            if (parsedData.length === 0) {
+                analyzeData();
+                if (parsedData.length === 0) return;
             }
+
+            const formattedString = parsedData.map(item => `${quoteType}${item.replace(new RegExp(quoteType, 'g'), `\\${quoteType}`)}${quoteType}`).join(', ');
             
-            document.getElementById('formatted-text').textContent = formatted;
-            document.getElementById('formatted-output').style.display = 'block';
-            document.getElementById('formatted-output').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            formattedOutput.value = formattedString;
+            formattedOutputTitle.textContent = `${t('formattedOutput')} (${quoteType === "'" ? t('singleQuotes') : t('doubleQuotes')}):`;
+            formattedOutputContainer.classList.remove('hidden');
         }
 
-        function copyFormatted() {
-            const formattedText = document.getElementById('formatted-text').textContent;
-            navigator.clipboard.writeText(formattedText).then(() => {
-                // Visual feedback
-                const element = document.getElementById('formatted-text');
-                const originalBorder = element.style.border;
-                element.style.border = '2px solid #4caf50';
-                element.style.backgroundColor = '#e8f5e8';
-                
+        function clearAll() {
+            inputText.value = '';
+            parsedData = [];
+            updateResultsUI();
+            formattedOutput.value = '';
+            formattedOutputContainer.classList.add('hidden');
+            resultsMessage.classList.add('hidden');
+        }
+
+        function copyToClipboard() {
+            if (!formattedOutput.value) return;
+
+            const textArea = document.createElement('textarea');
+            textArea.value = formattedOutput.value;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                copyBtn.innerHTML = '<i class="fas fa-check text-green-600 fa-lg"></i>';
                 setTimeout(() => {
-                    element.style.border = originalBorder;
-                    element.style.backgroundColor = 'white';
-                }, 1000);
-                
-                // Show temporary message
-                const copyMsg = document.createElement('div');
-                copyMsg.textContent = t('copied');
-                copyMsg.style.cssText = `
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    background: #4caf50;
-                    color: white;
-                    padding: 10px 20px;
-                    border-radius: 25px;
-                    z-index: 1000;
-                    font-weight: bold;
-                    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-                `;
-                document.body.appendChild(copyMsg);
-                
-                setTimeout(() => {
-                    document.body.removeChild(copyMsg);
-                }, 2000);
-            }).catch(() => {
-                alert(t('copyFail'));
-            });
+                   copyBtn.innerHTML = '<i class="far fa-copy fa-lg"></i>';
+                }, 1500);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+            document.body.removeChild(textArea);
+        }
+        
+        function escapeHtml(unsafe) {
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
         }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Auto-process on input for better UX
+                // Auto-process on input for better UX
         document.getElementById('inputText').addEventListener('input', function() {
             // Debounce to avoid excessive processing
             clearTimeout(this.timeout);
-            this.timeout = setTimeout(processText, 500);
+            this.timeout = setTimeout(analyzeData, 500);
         });
 
-        // Example data for demonstration
-        document.addEventListener('DOMContentLoaded', function() {
-            const exampleData = `123,456,789
-23
-8888,1999
-hello,world
-42`;
-            document.getElementById('inputText').value = exampleData;
-            setLanguage(currentLang);
-            processText();
-        });
     </script>
+
 </body>
 </html>

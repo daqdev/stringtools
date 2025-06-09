@@ -78,7 +78,7 @@
 <body class="min-h-screen flex flex-col items-center p-4">
 
     <header class="relative w-full max-w-6xl mb-8 text-center py-4">
-        <h1 id="site-title" class="text-3xl font-bold">string tools</h1>
+        <h1 id="site-title" class="text-3xl font-bold">strings</h1>
         <button id="langToggle" class="absolute bottom-4 right-4 w-10 h-10 rounded-md bg-gray-200 flex items-center justify-center"></button>
     </header>
 
@@ -117,13 +117,20 @@
             </div>
             
             <div id="formatted-output-container" class="mt-6 hidden">
-                <h3 class="text-lg font-semibold text-gray-700 mb-2" id="formattedOutputTitle">Formatted Output:</h3>
-                <div class="relative">
-                    <textarea id="formattedOutput" readonly class="w-full bg-gray-900 text-green-400 font-mono text-sm border border-gray-700 rounded-xl p-4 pr-12 focus:outline-none resize-none" rows="4"></textarea>
-                    <button id="copyBtn" class="absolute top-3 right-3 text-gray-400 hover:text-white transition" title="Copy to clipboard">
+                <div class=" relative">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2" id="formattedOutputTitle">Formatted Output:</h3>
+                    <button id="copyBtn" class="absolute top-1 right-3 text-gray-400 hover:text-black transition"
+                        title="Copy to clipboard">
                         <i class="far fa-copy fa-lg"></i>
                     </button>
                 </div>
+                <!-- <h3 class="text-lg font-semibold text-gray-700 mb-2" id="formattedOutputTitle">Formatted Output:</h3> -->
+                <!-- <div class="relative"> -->
+                    <textarea id="formattedOutput" readonly class="w-full bg-gray-900 text-green-400 font-mono text-sm border border-gray-700 rounded-xl p-4 pr-12 focus:outline-none resize-none" rows="4"></textarea>
+                    <!-- <button id="copyBtn" class="absolute top-3 right-3 text-gray-400 hover:text-white transition" title="Copy to clipboard">
+                        <i class="far fa-copy fa-lg"></i>
+                    </button>
+                </div> -->
                  <p id="copy-hint" class="text-xs text-gray-500 mt-2 text-center">Click the formatted text or the icon to copy it.</p>
             </div>
         </div>
@@ -305,7 +312,7 @@
             textArea.select();
             try {
                 document.execCommand('copy');
-                copyBtn.innerHTML = '<i class="fas fa-check text-green-500 fa-lg"></i>';
+                copyBtn.innerHTML = '<i class="fas fa-check text-green-600 fa-lg"></i>';
                 setTimeout(() => {
                    copyBtn.innerHTML = '<i class="far fa-copy fa-lg"></i>';
                 }, 1500);
@@ -323,6 +330,13 @@
                  .replace(/"/g, "&quot;")
                  .replace(/'/g, "&#039;");
         }
+
+                // Auto-process on input for better UX
+        document.getElementById('inputText').addEventListener('input', function() {
+            // Debounce to avoid excessive processing
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(analyzeData, 500);
+        });
 
     </script>
 

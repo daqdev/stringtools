@@ -93,9 +93,10 @@
             <textarea id="inputText" class="w-full flex-grow bg-gray-50 border border-gray-300 rounded-xl p-4 text-gray-700 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition resize-none" rows="12" placeholder="Paste your data here... e.g.&#10;123, 456, 789&#10;23&#10;hello,world&#10;42"></textarea>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
                 <button id="analyzeBtn" class="btn btn-primary p-3 flex items-center justify-center"><i class="fas fa-search mr-2"></i>Analyze Data</button>
-                <button id="formatSingleBtn" class="btn btn-secondary p-3">Format (Single Quotes)</button>
-                <button id="formatDoubleBtn" class="btn btn-secondary p-3">Format (Double Quotes)</button>
-                <button id="formatNewlineBtn" class="btn btn-secondary p-3">Format (New Lines)</button>
+                <button id="separatorToggleBtn" class="btn btn-secondary p-3">Separator: Comma</button>
+                <button id="quoteSingleBtn" class="btn btn-secondary p-3">Single Quotes</button>
+                <button id="quoteDoubleBtn" class="btn btn-secondary p-3">Double Quotes</button>
+                <button id="quoteNoneBtn" class="btn btn-secondary p-3">No Quotes</button>
                 <button id="clearBtn" class="btn btn-danger p-3 flex items-center justify-center"><i class="fas fa-trash-alt mr-2"></i>Clear</button>
             </div>
         </div>
@@ -140,9 +141,10 @@
     <script>
         const inputText = document.getElementById('inputText');
         const analyzeBtn = document.getElementById('analyzeBtn');
-        const formatSingleBtn = document.getElementById('formatSingleBtn');
-        const formatDoubleBtn = document.getElementById('formatDoubleBtn');
-        const formatNewlineBtn = document.getElementById('formatNewlineBtn');
+        const separatorToggleBtn = document.getElementById('separatorToggleBtn');
+        const quoteSingleBtn = document.getElementById('quoteSingleBtn');
+        const quoteDoubleBtn = document.getElementById('quoteDoubleBtn');
+        const quoteNoneBtn = document.getElementById('quoteNoneBtn');
         const clearBtn = document.getElementById('clearBtn');
         const resultsMessage = document.getElementById('results-message');
         const detectionMessage = document.getElementById('detectionMessage');
@@ -160,9 +162,11 @@
             en: {
                 inputText: 'Input Text',
                 analyzeData: 'Analyze Data',
-                formatSingle: 'Format (Single Quotes)',
-                formatDouble: 'Format (Double Quotes)',
-                formatNewline: 'Format (New Lines)',
+                separatorComma: 'Separator: Comma',
+                separatorNewline: 'Separator: New Lines',
+                quoteSingle: 'Single Quotes',
+                quoteDouble: 'Double Quotes',
+                noQuotes: 'No Quotes',
                 clear: 'Clear',
                 results: 'Results',
                 formattedOutput: 'Formatted Output',
@@ -176,9 +180,16 @@
             es: {
                 inputText: 'Texto de Entrada',
                 analyzeData: 'Analizar Datos',
-                formatSingle: 'Formatear (Comillas simples)',
-                formatDouble: 'Formatear (Comillas dobles)',
-                formatNewline: 'Formatear (Nuevas líneas)',
+                separatorComma: 'Separador: Coma',
+                separatorNewline: 'Separador: Nueva línea',
+                quoteSingle: 'Comillas simples',
+                quoteDouble: 'Comillas dobles',
+                noQuotes: 'Sin comillas',
+                separatorComma: 'Separador: Coma',
+                separatorNewline: 'Separador: Nueva línea',
+                quoteSingle: 'Comillas simples',
+                quoteDouble: 'Comillas dobles',
+                noQuotes: 'Sin comillas',
                 clear: 'Limpiar',
                 results: 'Resultados',
                 formattedOutput: 'Salida Formateada',
@@ -192,9 +203,11 @@
             pt: {
                 inputText: 'Texto de Entrada',
                 analyzeData: 'Analisar Dados',
-                formatSingle: 'Formatar (Aspas simples)',
-                formatDouble: 'Formatar (Aspas duplas)',
-                formatNewline: 'Formatar (Linhas)',
+                separatorComma: 'Separador: Vírgula',
+                separatorNewline: 'Separador: Nova linha',
+                quoteSingle: 'Aspas simples',
+                quoteDouble: 'Aspas duplas',
+                noQuotes: 'Sem aspas',
                 clear: 'Limpar',
                 results: 'Resultados',
                 formattedOutput: 'Saída Formatada',
@@ -225,9 +238,10 @@
             langToggle.textContent = flagIcons[lang];
             inputTitle.textContent = t('inputText');
             analyzeBtn.innerHTML = '<i class="fas fa-search mr-2"></i>' + t('analyzeData');
-            formatSingleBtn.textContent = t('formatSingle');
-            formatDoubleBtn.textContent = t('formatDouble');
-            formatNewlineBtn.textContent = t('formatNewline');
+            separatorToggleBtn.textContent = currentSeparator === ',' ? t('separatorComma') : t('separatorNewline');
+            quoteSingleBtn.textContent = t('quoteSingle');
+            quoteDoubleBtn.textContent = t('quoteDouble');
+            quoteNoneBtn.textContent = t('noQuotes');
             clearBtn.innerHTML = '<i class="fas fa-trash-alt mr-2"></i>' + t('clear');
             resultsTitle.textContent = t('results');
             formattedOutputTitle.textContent = t('formattedOutput') + ':';
@@ -241,11 +255,14 @@
         }
 
         let parsedData = [];
+        let currentSeparator = ',';
+        let currentQuote = '';
 
         analyzeBtn.addEventListener('click', analyzeData);
-        formatSingleBtn.addEventListener('click', () => formatData("'"));
-        formatDoubleBtn.addEventListener('click', () => formatData('"'));
-        formatNewlineBtn.addEventListener('click', formatNewline);
+        separatorToggleBtn.addEventListener('click', toggleSeparator);
+        quoteSingleBtn.addEventListener('click', () => setQuote("'"));
+        quoteDoubleBtn.addEventListener('click', () => setQuote('"'));
+        quoteNoneBtn.addEventListener('click', () => setQuote(''));
         clearBtn.addEventListener('click', clearAll);
         copyBtn.addEventListener('click', copyToClipboard);
         formattedOutput.addEventListener('click', copyToClipboard);
@@ -302,28 +319,36 @@
             }
         }
 
-        function formatData(quoteType) {
-            if (parsedData.length === 0) {
-                analyzeData();
-                if (parsedData.length === 0) return;
-            }
-
-            const formattedString = parsedData.map(item => `${quoteType}${item.replace(new RegExp(quoteType, 'g'), `\\${quoteType}`)}${quoteType}`).join(', ');
-            
-            formattedOutput.value = formattedString;
-            formattedOutputTitle.textContent = `${t('formattedOutput')} (${quoteType === "'" ? t('singleQuotes') : t('doubleQuotes')}):`;
-            formattedOutputContainer.classList.remove('hidden');
+        function toggleSeparator() {
+            currentSeparator = currentSeparator === ',' ? '\n' : ',';
+            separatorToggleBtn.textContent = currentSeparator === ',' ? t('separatorComma') : t('separatorNewline');
+            updateFormattedOutput();
         }
 
-        function formatNewline() {
+        function setQuote(q) {
+            currentQuote = q;
+            updateFormattedOutput();
+        }
+
+        function updateFormattedOutput() {
             if (parsedData.length === 0) {
                 analyzeData();
                 if (parsedData.length === 0) return;
             }
 
-            const formattedString = parsedData.join('\n');
+            const sepStr = currentSeparator === ',' ? ', ' : '\n';
+
+            let formattedString;
+            if (currentQuote) {
+                formattedString = parsedData.map(item => `${currentQuote}${item.replace(new RegExp(currentQuote, 'g'), `\\${currentQuote}`)}${currentQuote}`).join(sepStr);
+            } else {
+                formattedString = parsedData.join(sepStr);
+            }
+
             formattedOutput.value = formattedString;
-            formattedOutputTitle.textContent = `${t('formattedOutput')} (${t('newLines')}):`;
+            const quoteLabel = currentQuote === "'" ? t('singleQuotes') : currentQuote === '"' ? t('doubleQuotes') : t('noQuotes');
+            const sepLabel = currentSeparator === ',' ? t('separatorComma') : t('separatorNewline');
+            formattedOutputTitle.textContent = `${t('formattedOutput')} (${quoteLabel}, ${sepLabel}):`;
             formattedOutputContainer.classList.remove('hidden');
         }
 

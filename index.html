@@ -168,10 +168,11 @@
                     </button>
                 </div> -->
                 <p id="copy-hint" class="text-xs text-gray-500 mt-2 text-center">Click the formatted text or the icon to copy it.</p>
-                <p id="copy-greeting" class="text-xs text-green-600 mt-2 text-center hidden"></p>
             </div>
         </div>
     </main>
+
+    <div id="copy-greeting" class="hidden fixed top-4 right-4 bg-green-500 text-white text-sm px-4 py-2 rounded-lg shadow pointer-events-none"></div>
 
     <script>
         const inputText = document.getElementById('inputText');
@@ -431,7 +432,7 @@
                 if (greetingTimeout) clearTimeout(greetingTimeout);
                 greetingTimeout = setTimeout(() => {
                     copyGreetingEl.classList.add('hidden');
-                }, 2000);
+                }, 1000);
                 setTimeout(() => {
                    copyBtn.innerHTML = '<i class="far fa-copy fa-lg"></i>';
                 }, 1500);

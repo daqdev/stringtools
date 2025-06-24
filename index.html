@@ -73,6 +73,45 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 26px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e2e8f0;
+            transition: background-color 0.3s;
+            border-radius: 9999px;
+        }
+        .slider:before {
+            position: absolute;
+            content: '';
+            height: 22px;
+            width: 22px;
+            left: 2px;
+            top: 2px;
+            background-color: white;
+            transition: transform 0.3s;
+            border-radius: 9999px;
+        }
+        .switch input:checked + .slider {
+            background-color: #4f46e5;
+        }
+        .switch input:checked + .slider:before {
+            transform: translateX(22px);
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-4">
@@ -93,7 +132,14 @@
             <textarea id="inputText" class="w-full flex-grow bg-gray-50 border border-gray-300 rounded-xl p-4 text-gray-700 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition resize-none" rows="12" placeholder="Paste your data here... e.g.&#10;123, 456, 789&#10;23&#10;hello,world&#10;42"></textarea>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
                 <button id="analyzeBtn" class="btn btn-primary p-3 flex items-center justify-center"><i class="fas fa-search mr-2"></i>Analyze Data</button>
-                <button id="separatorToggleBtn" class="btn btn-secondary p-3">Separator: Comma</button>
+                <div id="separatorToggleWrapper" class="p-3 flex items-center justify-center bg-gray-200 rounded-xl">
+                    <span id="separatorCommaLabel" class="text-sm mr-2">Comma</span>
+                    <label class="switch">
+                        <input type="checkbox" id="separatorToggleBtn">
+                        <span class="slider"></span>
+                    </label>
+                    <span id="separatorNewlineLabel" class="text-sm ml-2">New Lines</span>
+                </div>
                 <button id="quoteSingleBtn" class="btn btn-secondary p-3">Single Quotes</button>
                 <button id="quoteDoubleBtn" class="btn btn-secondary p-3">Double Quotes</button>
                 <button id="quoteNoneBtn" class="btn btn-secondary p-3">No Quotes</button>
@@ -142,6 +188,8 @@
         const inputText = document.getElementById('inputText');
         const analyzeBtn = document.getElementById('analyzeBtn');
         const separatorToggleBtn = document.getElementById('separatorToggleBtn');
+        const separatorCommaLabel = document.getElementById('separatorCommaLabel');
+        const separatorNewlineLabel = document.getElementById('separatorNewlineLabel');
         const quoteSingleBtn = document.getElementById('quoteSingleBtn');
         const quoteDoubleBtn = document.getElementById('quoteDoubleBtn');
         const quoteNoneBtn = document.getElementById('quoteNoneBtn');
@@ -173,6 +221,7 @@
                 singleQuotes: 'Single Quotes',
                 doubleQuotes: 'Double Quotes',
                 newLines: 'New Lines',
+                comma: 'Comma',
                 copyHint: 'Click the formatted text or the icon to copy it.',
                 detection: 'Data dump detected! Found {count} values ready for processing.',
                 placeholder: 'Paste your data here... e.g.\n123, 456, 789\n23\nhello,world\n42'
@@ -196,6 +245,7 @@
                 singleQuotes: 'Comillas simples',
                 doubleQuotes: 'Comillas dobles',
                 newLines: 'Nuevas líneas',
+                comma: 'Coma',
                 copyHint: 'Haz clic en el texto formateado o el ícono para copiarlo.',
                 detection: '¡Volcado detectado! Se encontraron {count} valores listos para procesar.',
                 placeholder: 'Pega tus datos aquí... ej.\n123, 456, 789\n23\nhola,mundo\n42'
@@ -214,6 +264,7 @@
                 singleQuotes: 'Aspas simples',
                 doubleQuotes: 'Aspas duplas',
                 newLines: 'Linhas',
+                comma: 'Vírgula',
                 copyHint: 'Clique no texto formatado ou no ícone para copiar.',
                 detection: 'Dump detectado! Encontrados {count} valores prontos para processar.',
                 placeholder: 'Cole seus dados aqui... ex.\n123, 456, 789\n23\nola,mundo\n42'
@@ -238,7 +289,9 @@
             langToggle.textContent = flagIcons[lang];
             inputTitle.textContent = t('inputText');
             analyzeBtn.innerHTML = '<i class="fas fa-search mr-2"></i>' + t('analyzeData');
-            separatorToggleBtn.textContent = currentSeparator === ',' ? t('separatorComma') : t('separatorNewline');
+            separatorCommaLabel.textContent = t('comma');
+            separatorNewlineLabel.textContent = t('newLines');
+            separatorToggleBtn.checked = currentSeparator === '\n';
             quoteSingleBtn.textContent = t('quoteSingle');
             quoteDoubleBtn.textContent = t('quoteDouble');
             quoteNoneBtn.textContent = t('noQuotes');
@@ -259,7 +312,7 @@
         let currentQuote = '';
 
         analyzeBtn.addEventListener('click', analyzeData);
-        separatorToggleBtn.addEventListener('click', toggleSeparator);
+        separatorToggleBtn.addEventListener('change', toggleSeparator);
         quoteSingleBtn.addEventListener('click', () => setQuote("'"));
         quoteDoubleBtn.addEventListener('click', () => setQuote('"'));
         quoteNoneBtn.addEventListener('click', () => setQuote(''));
@@ -321,7 +374,7 @@
 
         function toggleSeparator() {
             currentSeparator = currentSeparator === ',' ? '\n' : ',';
-            separatorToggleBtn.textContent = currentSeparator === ',' ? t('separatorComma') : t('separatorNewline');
+            separatorToggleBtn.checked = currentSeparator === '\n';
             updateFormattedOutput();
         }
 

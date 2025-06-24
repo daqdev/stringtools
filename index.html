@@ -73,44 +73,35 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .switch {
+        .separator-toggle {
             position: relative;
-            display: inline-block;
-            width: 48px;
-            height: 26px;
-        }
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            display: flex;
+            width: 120px;
             background-color: #e2e8f0;
-            transition: background-color 0.3s;
-            border-radius: 9999px;
+            border-radius: 0.75rem;
+            overflow: hidden;
         }
-        .slider:before {
+        .separator-toggle-option {
+            flex: 1;
+            text-align: center;
+            padding: 0.25rem 0;
+            font-size: 0.875rem;
+            cursor: pointer;
+            z-index: 1;
+            color: #475569;
+            user-select: none;
+        }
+        .separator-toggle-option.active {
+            color: white;
+        }
+        .separator-toggle-highlight {
             position: absolute;
-            content: '';
-            height: 22px;
-            width: 22px;
-            left: 2px;
-            top: 2px;
-            background-color: white;
-            transition: transform 0.3s;
-            border-radius: 9999px;
-        }
-        .switch input:checked + .slider {
+            top: 0;
+            bottom: 0;
+            width: 50%;
             background-color: #4f46e5;
-        }
-        .switch input:checked + .slider:before {
-            transform: translateX(22px);
+            border-radius: 0.75rem;
+            transition: transform 0.3s;
         }
     </style>
 </head>
@@ -132,13 +123,10 @@
             <textarea id="inputText" class="w-full flex-grow bg-gray-50 border border-gray-300 rounded-xl p-4 text-gray-700 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition resize-none" rows="12" placeholder="Paste your data here... e.g.&#10;123, 456, 789&#10;23&#10;hello,world&#10;42"></textarea>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
                 <button id="analyzeBtn" class="btn btn-primary p-3 flex items-center justify-center"><i class="fas fa-search mr-2"></i>Analyze Data</button>
-                <div id="separatorToggleWrapper" class="p-3 flex items-center justify-center bg-gray-200 rounded-xl">
-                    <span id="separatorCommaLabel" class="text-sm mr-2">Comma</span>
-                    <label class="switch">
-                        <input type="checkbox" id="separatorToggleBtn">
-                        <span class="slider"></span>
-                    </label>
-                    <span id="separatorNewlineLabel" class="text-sm ml-2">New Lines</span>
+                <div id="separatorToggle" class="separator-toggle mx-auto">
+                    <div id="separatorHighlight" class="separator-toggle-highlight"></div>
+                    <div id="separatorCommaBtn" class="separator-toggle-option active">Comma</div>
+                    <div id="separatorNewlineBtn" class="separator-toggle-option">New Lines</div>
                 </div>
                 <button id="quoteSingleBtn" class="btn btn-secondary p-3">Single Quotes</button>
                 <button id="quoteDoubleBtn" class="btn btn-secondary p-3">Double Quotes</button>
@@ -187,9 +175,9 @@
     <script>
         const inputText = document.getElementById('inputText');
         const analyzeBtn = document.getElementById('analyzeBtn');
-        const separatorToggleBtn = document.getElementById('separatorToggleBtn');
-        const separatorCommaLabel = document.getElementById('separatorCommaLabel');
-        const separatorNewlineLabel = document.getElementById('separatorNewlineLabel');
+        const separatorHighlight = document.getElementById('separatorHighlight');
+        const separatorCommaBtn = document.getElementById('separatorCommaBtn');
+        const separatorNewlineBtn = document.getElementById('separatorNewlineBtn');
         const quoteSingleBtn = document.getElementById('quoteSingleBtn');
         const quoteDoubleBtn = document.getElementById('quoteDoubleBtn');
         const quoteNoneBtn = document.getElementById('quoteNoneBtn');
@@ -229,11 +217,6 @@
             es: {
                 inputText: 'Texto de Entrada',
                 analyzeData: 'Analizar Datos',
-                separatorComma: 'Separador: Coma',
-                separatorNewline: 'Separador: Nueva línea',
-                quoteSingle: 'Comillas simples',
-                quoteDouble: 'Comillas dobles',
-                noQuotes: 'Sin comillas',
                 separatorComma: 'Separador: Coma',
                 separatorNewline: 'Separador: Nueva línea',
                 quoteSingle: 'Comillas simples',
@@ -289,9 +272,9 @@
             langToggle.textContent = flagIcons[lang];
             inputTitle.textContent = t('inputText');
             analyzeBtn.innerHTML = '<i class="fas fa-search mr-2"></i>' + t('analyzeData');
-            separatorCommaLabel.textContent = t('comma');
-            separatorNewlineLabel.textContent = t('newLines');
-            separatorToggleBtn.checked = currentSeparator === '\n';
+            separatorCommaBtn.textContent = t('comma');
+            separatorNewlineBtn.textContent = t('newLines');
+            updateSeparatorUI();
             quoteSingleBtn.textContent = t('quoteSingle');
             quoteDoubleBtn.textContent = t('quoteDouble');
             quoteNoneBtn.textContent = t('noQuotes');
@@ -312,7 +295,8 @@
         let currentQuote = '';
 
         analyzeBtn.addEventListener('click', analyzeData);
-        separatorToggleBtn.addEventListener('change', toggleSeparator);
+        separatorCommaBtn.addEventListener('click', () => setSeparator(','));
+        separatorNewlineBtn.addEventListener('click', () => setSeparator('\n'));
         quoteSingleBtn.addEventListener('click', () => setQuote("'"));
         quoteDoubleBtn.addEventListener('click', () => setQuote('"'));
         quoteNoneBtn.addEventListener('click', () => setQuote(''));
@@ -372,10 +356,20 @@
             }
         }
 
-        function toggleSeparator() {
-            currentSeparator = currentSeparator === ',' ? '\n' : ',';
-            separatorToggleBtn.checked = currentSeparator === '\n';
+        function setSeparator(sep) {
+            currentSeparator = sep;
+            updateSeparatorUI();
             updateFormattedOutput();
+        }
+
+        function toggleSeparator() {
+            setSeparator(currentSeparator === ',' ? '\n' : ',');
+        }
+
+        function updateSeparatorUI() {
+            separatorHighlight.style.transform = currentSeparator === ',' ? 'translateX(0)' : 'translateX(100%)';
+            separatorCommaBtn.classList.toggle('active', currentSeparator === ',');
+            separatorNewlineBtn.classList.toggle('active', currentSeparator === '\n');
         }
 
         function setQuote(q) {

@@ -214,7 +214,7 @@
                 newLines: 'New Lines',
                 comma: 'Comma',
                 copyHint: 'Click the formatted text or the icon to copy it.',
-                copyGreeting: 'Copied! Greetings!',
+                copyGreeting: 'Copied to clipboard!',
                 detection: 'Data dump detected! Found {count} values ready for processing.',
                 placeholder: 'Paste your data here... e.g.\n123, 456, 789\n23\nhello,world\n42'
             },
@@ -234,7 +234,7 @@
                 newLines: 'Nuevas líneas',
                 comma: 'Coma',
                 copyHint: 'Haz clic en el texto formateado o el ícono para copiarlo.',
-                copyGreeting: '¡Copiado! ¡Saludos!',
+                copyGreeting: 'Copiado al portapapeles!',
                 detection: '¡Volcado detectado! Se encontraron {count} valores listos para procesar.',
                 placeholder: 'Pega tus datos aquí... ej.\n123, 456, 789\n23\nhola,mundo\n42'
             },
@@ -254,7 +254,7 @@
                 newLines: 'Linhas',
                 comma: 'Vírgula',
                 copyHint: 'Clique no texto formatado ou no ícone para copiar.',
-                copyGreeting: 'Copiado! Saudações!',
+                copyGreeting: 'Copiado!',
                 detection: 'Dump detectado! Encontrados {count} valores prontos para processar.',
                 placeholder: 'Cole seus dados aqui... ex.\n123, 456, 789\n23\nola,mundo\n42'
             }
@@ -429,9 +429,19 @@
                 document.execCommand('copy');
                 copyBtn.innerHTML = '<i class="fas fa-check text-green-600 fa-lg"></i>';
                 copyGreetingEl.classList.remove('hidden');
+                copyGreetingEl.style.opacity = '0';
+                copyGreetingEl.style.transition = 'opacity 0.4s';
+                // Fade in
+                setTimeout(() => {
+                    copyGreetingEl.style.opacity = '1';
+                }, 10);
                 if (greetingTimeout) clearTimeout(greetingTimeout);
                 greetingTimeout = setTimeout(() => {
-                    copyGreetingEl.classList.add('hidden');
+                    // Fade out
+                    copyGreetingEl.style.opacity = '0';
+                    setTimeout(() => {
+                        copyGreetingEl.classList.add('hidden');
+                    }, 400);
                 }, 1000);
                 setTimeout(() => {
                    copyBtn.innerHTML = '<i class="far fa-copy fa-lg"></i>';

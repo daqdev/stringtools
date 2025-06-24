@@ -73,6 +73,36 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .separator-toggle {
+            position: relative;
+            display: flex;
+            width: 120px;
+            background-color: #e2e8f0;
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+        .separator-toggle-option {
+            flex: 1;
+            text-align: center;
+            padding: 0.25rem 0;
+            font-size: 0.875rem;
+            cursor: pointer;
+            z-index: 1;
+            color: #475569;
+            user-select: none;
+        }
+        .separator-toggle-option.active {
+            color: white;
+        }
+        .separator-toggle-highlight {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 50%;
+            background-color: #4f46e5;
+            border-radius: 0.75rem;
+            transition: transform 0.3s;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-4">
@@ -93,7 +123,11 @@
             <textarea id="inputText" class="w-full flex-grow bg-gray-50 border border-gray-300 rounded-xl p-4 text-gray-700 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition resize-none" rows="12" placeholder="Paste your data here... e.g.&#10;123, 456, 789&#10;23&#10;hello,world&#10;42"></textarea>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
                 <button id="analyzeBtn" class="btn btn-primary p-3 flex items-center justify-center"><i class="fas fa-search mr-2"></i>Analyze Data</button>
-                <button id="separatorToggleBtn" class="btn btn-secondary p-3">Separator: Comma</button>
+                <div id="separatorToggle" class="separator-toggle mx-auto">
+                    <div id="separatorHighlight" class="separator-toggle-highlight"></div>
+                    <div id="separatorCommaBtn" class="separator-toggle-option active">Comma</div>
+                    <div id="separatorNewlineBtn" class="separator-toggle-option">New Lines</div>
+                </div>
                 <button id="quoteSingleBtn" class="btn btn-secondary p-3">Single Quotes</button>
                 <button id="quoteDoubleBtn" class="btn btn-secondary p-3">Double Quotes</button>
                 <button id="quoteNoneBtn" class="btn btn-secondary p-3">No Quotes</button>
@@ -141,7 +175,9 @@
     <script>
         const inputText = document.getElementById('inputText');
         const analyzeBtn = document.getElementById('analyzeBtn');
-        const separatorToggleBtn = document.getElementById('separatorToggleBtn');
+        const separatorHighlight = document.getElementById('separatorHighlight');
+        const separatorCommaBtn = document.getElementById('separatorCommaBtn');
+        const separatorNewlineBtn = document.getElementById('separatorNewlineBtn');
         const quoteSingleBtn = document.getElementById('quoteSingleBtn');
         const quoteDoubleBtn = document.getElementById('quoteDoubleBtn');
         const quoteNoneBtn = document.getElementById('quoteNoneBtn');
@@ -173,6 +209,7 @@
                 singleQuotes: 'Single Quotes',
                 doubleQuotes: 'Double Quotes',
                 newLines: 'New Lines',
+                comma: 'Comma',
                 copyHint: 'Click the formatted text or the icon to copy it.',
                 detection: 'Data dump detected! Found {count} values ready for processing.',
                 placeholder: 'Paste your data here... e.g.\n123, 456, 789\n23\nhello,world\n42'
@@ -185,17 +222,13 @@
                 quoteSingle: 'Comillas simples',
                 quoteDouble: 'Comillas dobles',
                 noQuotes: 'Sin comillas',
-                separatorComma: 'Separador: Coma',
-                separatorNewline: 'Separador: Nueva línea',
-                quoteSingle: 'Comillas simples',
-                quoteDouble: 'Comillas dobles',
-                noQuotes: 'Sin comillas',
                 clear: 'Limpiar',
                 results: 'Resultados',
                 formattedOutput: 'Salida Formateada',
                 singleQuotes: 'Comillas simples',
                 doubleQuotes: 'Comillas dobles',
                 newLines: 'Nuevas líneas',
+                comma: 'Coma',
                 copyHint: 'Haz clic en el texto formateado o el ícono para copiarlo.',
                 detection: '¡Volcado detectado! Se encontraron {count} valores listos para procesar.',
                 placeholder: 'Pega tus datos aquí... ej.\n123, 456, 789\n23\nhola,mundo\n42'
@@ -214,6 +247,7 @@
                 singleQuotes: 'Aspas simples',
                 doubleQuotes: 'Aspas duplas',
                 newLines: 'Linhas',
+                comma: 'Vírgula',
                 copyHint: 'Clique no texto formatado ou no ícone para copiar.',
                 detection: 'Dump detectado! Encontrados {count} valores prontos para processar.',
                 placeholder: 'Cole seus dados aqui... ex.\n123, 456, 789\n23\nola,mundo\n42'
@@ -238,7 +272,9 @@
             langToggle.textContent = flagIcons[lang];
             inputTitle.textContent = t('inputText');
             analyzeBtn.innerHTML = '<i class="fas fa-search mr-2"></i>' + t('analyzeData');
-            separatorToggleBtn.textContent = currentSeparator === ',' ? t('separatorComma') : t('separatorNewline');
+            separatorCommaBtn.textContent = t('comma');
+            separatorNewlineBtn.textContent = t('newLines');
+            updateSeparatorUI();
             quoteSingleBtn.textContent = t('quoteSingle');
             quoteDoubleBtn.textContent = t('quoteDouble');
             quoteNoneBtn.textContent = t('noQuotes');
@@ -259,7 +295,8 @@
         let currentQuote = '';
 
         analyzeBtn.addEventListener('click', analyzeData);
-        separatorToggleBtn.addEventListener('click', toggleSeparator);
+        separatorCommaBtn.addEventListener('click', () => setSeparator(','));
+        separatorNewlineBtn.addEventListener('click', () => setSeparator('\n'));
         quoteSingleBtn.addEventListener('click', () => setQuote("'"));
         quoteDoubleBtn.addEventListener('click', () => setQuote('"'));
         quoteNoneBtn.addEventListener('click', () => setQuote(''));
@@ -319,10 +356,20 @@
             }
         }
 
-        function toggleSeparator() {
-            currentSeparator = currentSeparator === ',' ? '\n' : ',';
-            separatorToggleBtn.textContent = currentSeparator === ',' ? t('separatorComma') : t('separatorNewline');
+        function setSeparator(sep) {
+            currentSeparator = sep;
+            updateSeparatorUI();
             updateFormattedOutput();
+        }
+
+        function toggleSeparator() {
+            setSeparator(currentSeparator === ',' ? '\n' : ',');
+        }
+
+        function updateSeparatorUI() {
+            separatorHighlight.style.transform = currentSeparator === ',' ? 'translateX(0)' : 'translateX(100%)';
+            separatorCommaBtn.classList.toggle('active', currentSeparator === ',');
+            separatorNewlineBtn.classList.toggle('active', currentSeparator === '\n');
         }
 
         function setQuote(q) {

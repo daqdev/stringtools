@@ -167,7 +167,8 @@
                         <i class="far fa-copy fa-lg"></i>
                     </button>
                 </div> -->
-                 <p id="copy-hint" class="text-xs text-gray-500 mt-2 text-center">Click the formatted text or the icon to copy it.</p>
+                <p id="copy-hint" class="text-xs text-gray-500 mt-2 text-center">Click the formatted text or the icon to copy it.</p>
+                <p id="copy-greeting" class="text-xs text-green-600 mt-2 text-center hidden"></p>
             </div>
         </div>
     </main>
@@ -193,6 +194,7 @@
         const inputTitle = document.getElementById('input-title');
         const resultsTitle = document.getElementById('results-title');
         const copyHintEl = document.getElementById('copy-hint');
+        const copyGreetingEl = document.getElementById('copy-greeting');
 
         const translations = {
             en: {
@@ -211,6 +213,7 @@
                 newLines: 'New Lines',
                 comma: 'Comma',
                 copyHint: 'Click the formatted text or the icon to copy it.',
+                copyGreeting: 'Copied! Greetings!',
                 detection: 'Data dump detected! Found {count} values ready for processing.',
                 placeholder: 'Paste your data here... e.g.\n123, 456, 789\n23\nhello,world\n42'
             },
@@ -230,6 +233,7 @@
                 newLines: 'Nuevas líneas',
                 comma: 'Coma',
                 copyHint: 'Haz clic en el texto formateado o el ícono para copiarlo.',
+                copyGreeting: '¡Copiado! ¡Saludos!',
                 detection: '¡Volcado detectado! Se encontraron {count} valores listos para procesar.',
                 placeholder: 'Pega tus datos aquí... ej.\n123, 456, 789\n23\nhola,mundo\n42'
             },
@@ -249,6 +253,7 @@
                 newLines: 'Linhas',
                 comma: 'Vírgula',
                 copyHint: 'Clique no texto formatado ou no ícone para copiar.',
+                copyGreeting: 'Copiado! Saudações!',
                 detection: 'Dump detectado! Encontrados {count} valores prontos para processar.',
                 placeholder: 'Cole seus dados aqui... ex.\n123, 456, 789\n23\nola,mundo\n42'
             }
@@ -282,6 +287,7 @@
             resultsTitle.textContent = t('results');
             formattedOutputTitle.textContent = t('formattedOutput') + ':';
             copyHintEl.textContent = t('copyHint');
+            copyGreetingEl.textContent = t('copyGreeting');
             inputText.placeholder = t('placeholder');
         }
 
@@ -293,6 +299,7 @@
         let parsedData = [];
         let currentSeparator = ',';
         let currentQuote = '';
+        let greetingTimeout;
 
         analyzeBtn.addEventListener('click', analyzeData);
         separatorCommaBtn.addEventListener('click', () => setSeparator(','));
@@ -406,6 +413,8 @@
             formattedOutput.value = '';
             formattedOutputContainer.classList.add('hidden');
             resultsMessage.classList.add('hidden');
+            copyGreetingEl.classList.add('hidden');
+            if (greetingTimeout) clearTimeout(greetingTimeout);
         }
 
         function copyToClipboard() {
@@ -418,6 +427,11 @@
             try {
                 document.execCommand('copy');
                 copyBtn.innerHTML = '<i class="fas fa-check text-green-600 fa-lg"></i>';
+                copyGreetingEl.classList.remove('hidden');
+                if (greetingTimeout) clearTimeout(greetingTimeout);
+                greetingTimeout = setTimeout(() => {
+                    copyGreetingEl.classList.add('hidden');
+                }, 2000);
                 setTimeout(() => {
                    copyBtn.innerHTML = '<i class="far fa-copy fa-lg"></i>';
                 }, 1500);

@@ -73,35 +73,22 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .separator-toggle {
-            position: relative;
-            display: flex;
-            width: 176px;
-            background-color: #e2e8f0;
-            border-radius: 0.75rem;
-            overflow: hidden;
+        .separator-options input[type="radio"] {
+            display: none;
         }
-        .separator-toggle-option {
-            flex: 1;
-            text-align: center;
-            padding: 0.25rem 0;
+        .separator-options span {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
             font-size: 0.875rem;
-            cursor: pointer;
-            z-index: 1;
-            color: #475569;
-            user-select: none;
-        }
-        .separator-toggle-option.active {
-            color: white;
-        }
-        .separator-toggle-highlight {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 50%;
-            background-color: #4f46e5;
             border-radius: 0.75rem;
-            transition: transform 0.3s;
+            background-color: #e2e8f0;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+        .separator-options input[type="radio"]:checked + span {
+            background-color: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
         }
     </style>
 </head>
@@ -120,13 +107,18 @@
                  </div>
                 <h1 id="input-title" class="text-2xl font-bold text-gray-800">Input Text</h1>
             </div>
-            <textarea id="inputText" class="w-full flex-grow bg-gray-50 border border-gray-300 rounded-xl p-4 text-gray-700 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition resize-none" rows="12" placeholder="Paste your data here... e.g.&#10;123, 456, 789&#10;23&#10;hello,world&#10;42"></textarea>
+            <textarea id="inputText" class="w-full flex-grow bg-gray-50 border border-gray-300 rounded-xl p-4 text-gray-700 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition resize-y min-h-40 sm:min-h-56" rows="10" placeholder="Paste your data here... e.g.&#10;123, 456, 789&#10;23&#10;hello,world&#10;42"></textarea>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
                 <button id="analyzeBtn" class="btn btn-primary p-3 flex items-center justify-center"><i class="fas fa-search mr-2"></i>Analyze Data</button>
-                <div id="separatorToggle" class="separator-toggle mx-auto">
-                    <div id="separatorHighlight" class="separator-toggle-highlight"></div>
-                    <div id="separatorCommaBtn" class="separator-toggle-option active">Comma</div>
-                    <div id="separatorNewlineBtn" class="separator-toggle-option">New Lines</div>
+                <div class="separator-options flex justify-center gap-4 col-span-2 sm:col-span-1 mx-auto">
+                    <label class="cursor-pointer">
+                        <input type="radio" id="separatorCommaInput" name="separator" value="," checked>
+                        <span id="separatorCommaBtn">Comma</span>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" id="separatorNewlineInput" name="separator" value="\n">
+                        <span id="separatorNewlineBtn">New Lines</span>
+                    </label>
                 </div>
                 <button id="quoteSingleBtn" class="btn btn-secondary p-3">Single Quotes</button>
                 <button id="quoteDoubleBtn" class="btn btn-secondary p-3">Double Quotes</button>
@@ -162,7 +154,7 @@
                 </div>
                 <!-- <h3 class="text-lg font-semibold text-gray-700 mb-2" id="formattedOutputTitle">Formatted Output:</h3> -->
                 <!-- <div class="relative"> -->
-                    <textarea id="formattedOutput" readonly class="w-full bg-gray-900 text-green-400 font-mono text-sm border border-gray-700 rounded-xl p-4 pr-12 focus:outline-none resize-none" rows="4"></textarea>
+                    <textarea id="formattedOutput" readonly class="w-full bg-gray-900 text-green-400 font-mono text-sm border border-gray-700 rounded-xl p-4 pr-12 focus:outline-none resize-y min-h-20 sm:min-h-24" rows="4"></textarea>
                     <!-- <button id="copyBtn" class="absolute top-3 right-3 text-gray-400 hover:text-white transition" title="Copy to clipboard">
                         <i class="far fa-copy fa-lg"></i>
                     </button>
@@ -177,7 +169,8 @@
     <script>
         const inputText = document.getElementById('inputText');
         const analyzeBtn = document.getElementById('analyzeBtn');
-        const separatorHighlight = document.getElementById('separatorHighlight');
+        const separatorCommaInput = document.getElementById('separatorCommaInput');
+        const separatorNewlineInput = document.getElementById('separatorNewlineInput');
         const separatorCommaBtn = document.getElementById('separatorCommaBtn');
         const separatorNewlineBtn = document.getElementById('separatorNewlineBtn');
         const quoteSingleBtn = document.getElementById('quoteSingleBtn');
@@ -303,8 +296,8 @@
         let greetingTimeout;
 
         analyzeBtn.addEventListener('click', analyzeData);
-        separatorCommaBtn.addEventListener('click', () => setSeparator(','));
-        separatorNewlineBtn.addEventListener('click', () => setSeparator('\n'));
+        separatorCommaInput.addEventListener('change', () => setSeparator(','));
+        separatorNewlineInput.addEventListener('change', () => setSeparator('\n'));
         quoteSingleBtn.addEventListener('click', () => setQuote("'"));
         quoteDoubleBtn.addEventListener('click', () => setQuote('"'));
         quoteNoneBtn.addEventListener('click', () => setQuote(''));
@@ -370,14 +363,9 @@
             updateFormattedOutput();
         }
 
-        function toggleSeparator() {
-            setSeparator(currentSeparator === ',' ? '\n' : ',');
-        }
-
         function updateSeparatorUI() {
-            separatorHighlight.style.transform = currentSeparator === ',' ? 'translateX(0)' : 'translateX(100%)';
-            separatorCommaBtn.classList.toggle('active', currentSeparator === ',');
-            separatorNewlineBtn.classList.toggle('active', currentSeparator === '\n');
+            separatorCommaInput.checked = currentSeparator === ',';
+            separatorNewlineInput.checked = currentSeparator === '\n';
         }
 
         function setQuote(q) {

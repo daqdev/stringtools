@@ -509,7 +509,7 @@
             return text;
         }
 
-        const translator=undefined
+        let translator
         async function handleTranslate() {
             const text = translateInput.value.trim();
             if (!text) return;

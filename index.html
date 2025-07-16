@@ -511,6 +511,11 @@
 
         let translator
         async function handleTranslate() {
+            const original = translateBtnText.innerHTML;
+            translateBtn.disabled = true;
+            translateBtnText.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>' + t('translateLocally');
+
+            
             const text = translateInput.value.trim();
             if (!text) return;
             
@@ -525,10 +530,7 @@
                 });
             
 
-            const original = translateBtnText.innerHTML;
-            translateBtn.disabled = true;
-            translateBtnText.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>' + t('translateLocally');
-
+         
             await translator.translate(text).then(result => {
                 translationOutput.value = result;
                 translationOutputContainer.classList.remove('hidden');

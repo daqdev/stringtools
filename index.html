@@ -509,15 +509,27 @@
             return text;
         }
 
-        function handleTranslate() {
+        const translator=undefined
+        async function handleTranslate() {
             const text = translateInput.value.trim();
             if (!text) return;
+            
+            if (!'Translator' in self) {
+                // The Translator API is supported.
+                alert('Traduccion no soportada, actualice su Navegador')
+                return
+            }
+            translator=translator?translator: await Translator.create({
+                sourceLanguage: 'es',
+                targetLanguage: 'en',
+                });
+            
 
             const original = translateBtnText.innerHTML;
             translateBtn.disabled = true;
             translateBtnText.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>' + t('translateLocally');
 
-            translateText(text).then(result => {
+            await translator.translate(text).then(result => {
                 translationOutput.value = result;
                 translationOutputContainer.classList.remove('hidden');
             }).catch(err => {
